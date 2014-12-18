@@ -1,0 +1,166 @@
+<html>
+
+  <head>
+    <style>
+      body{ margin: 0px; }
+    </style>
+  </head>
+
+  <body>
+
+    <script src="lib/three.js">             </script>
+    <script src="lib/jquery.min.js">            </script>
+    <script src="lib/TrackballControls.js">     </script>
+    <script src="lib/SubdivisionModifier.js">   </script>
+    
+    <script src="lib/ShaderLoader.js"></script>
+
+    <script src="raymaker.js"></script>
+    <script src="create.js"></script>
+
+    <script>
+
+
+
+      var matcap = THREE.ImageUtils.loadTexture('img/rough-aluminium.jpg');
+
+      var uniforms = {
+
+        t_matcap:{ type:"t" , value: matcap },
+        fogColor:{ type:"v3" , value: new THREE.Vector3() },
+
+      }
+
+      var camera, renderer, scene , controls;
+      
+      var vs, fs;
+
+      var geometry, material , light;
+
+      var raycaster = new THREE.Raycaster(); 
+
+
+      var shaders = new ShaderLoader( '../shaders' , '../shaderChunks'   );
+
+      shaders.shaderSetLoaded = function(){
+        init();
+        animate();
+      }
+
+      shaders.load( 'vs-rainbow' , 'rainbow' , 'vertex' );
+      shaders.load( 'fs-rainbow' , 'rainbow' , 'fragment' );
+      
+      shaders.load( 'vs-ground' , 'ground' , 'vertex' );
+      shaders.load( 'fs-ground' , 'ground' , 'fragment' );
+
+
+      var rayStoppers = [];
+
+      var v = new THREE.Vector3();
+    
+
+
+      function init(){
+
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        camera = new THREE.PerspectiveCamera( 65 , w/h , .1 , 100 );
+        camera.position.z = 4;
+        camera.position.y = 1;
+
+        controls = new THREE.TrackballControls( camera );
+        scene = new THREE.Scene();
+
+
+        rayMaker = new RayMaker( v , v , 0 , 1000);
+
+        //light = new THREE.Vector3( .1 , 2 , .25 );
+
+
+
+
+
+        var geo = new THREE.PlaneGeometry( 100 , 100 );
+        var mat = new THREE.ShaderMaterial({
+          uniforms: uniforms,
+          vertexShader: shaders.vs.ground,
+          fragmentShader: shaders.fs.ground
+        });
+        var ground = new THREE.Mesh( geo , mat );
+
+        scene.add( ground );
+        ground.rotation.x = -Math.PI/2;
+        ground.updateMatrix();
+        ground.updateMatrixWorld();
+
+        rayStoppers.push( ground );
+
+
+        var lightMarker = new THREE.Mesh( 
+          new THREE.IcosahedronGeometry( .02 , 1 ),
+          new THREE.MeshNormalMaterial() 
+          );
+
+        var light = lightMarker.position;
+
+        light.set( .1 , 1.2 , .25 );
+
+        scene.add( lightMarker );
+
+        var opening = [];
+        var openingMarkers = [];
+        var openingPositions = [
+          [ .5 , .8 , .5 ], 
+          [ .1 , .9 , .6 ], 
+          [ -.5 , .8 , .5 ], 
+          [ -.5 , .7 , -.5 ], 
+          [ -.1 , .7 , -.6 ], 
+          [.5,  .8 , -.5 ],
+        ];
+        
+        var op = openingPositions;
+
+        var geo = new THREE.IcosahedronGeometry( .02 , 1 )
+        var mat = new THREE.MeshBasicMaterial( 0x00ff00 )
+
+        for( var i = 0; i < openingPositions.length ; i++ ){
+
+          var m = new THREE.Mesh( geo , mat );
+          m.position.set( op[i][0],op[i][1],op[i][2]) 
+          opening.push( m.position );
+          scene.add( m );
+        }
+        
+       
+        var geo = rayMaker.createGeometry( light , opening, rayStoppers );
+
+        var m = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
+
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          opacity: .1,
+          depthWrite: false
+          
+        }) );
+        scene.add( m );
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        document.body.appendChild( renderer.domElement );
+
+      }
+
+      function animate(){
+
+        requestAnimationFrame( animate );
+        controls.update();
+        renderer.render( scene , camera );
+      }
+
+    </script>
+
+  </body>
+</html>

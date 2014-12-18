@@ -96,6 +96,32 @@
 
         rayStoppers.push( ground );
 
+        var cube = new THREE.Mesh( new THREE.BoxGeometry( .2 , 20. , .2 ) , new THREE.MeshNormalMaterial() );
+
+        scene.add( cube );
+        cube.position.x = 1.;
+        cube.position.z = .7;
+        cube.position.y = .3;
+        cube.updateMatrix();
+        cube.updateMatrixWorld();
+        rayStoppers.push( cube );
+
+        var geo = new THREE.BoxGeometry( .1 , 20. , .1 );
+        var mat =  new THREE.MeshNormalMaterial();
+        for( var i = 0; i < 20; i ++ ){
+          var cube = new THREE.Mesh( geo , mat );
+
+          scene.add( cube );
+          cube.position.x = ( Math.random() -.5 ) * 5;
+          cube.position.y = .7;
+          cube.position.z = ( Math.random() -.5 ) * 5;
+          cube.updateMatrix();
+          cube.updateMatrixWorld();
+          rayStoppers.push( cube );
+
+        }
+
+
 
         var lightMarker = new THREE.Mesh( 
           new THREE.IcosahedronGeometry( .02 , 1 ),
@@ -104,20 +130,73 @@
 
         var light = lightMarker.position;
 
-        light.set( .1 , 1.2 , .25 );
+        light.set( .1 , 8.2 , .25 );
 
         scene.add( lightMarker );
 
         var opening = [];
         var openingMarkers = [];
-        var openingPositions = [
-          [ .5 , .8 , .5 ], 
-          [ .1 , .9 , .6 ], 
-          [ -.5 , .8 , .5 ], 
-          [ -.5 , .7 , -.5 ], 
-          [ -.1 , .7 , -.6 ], 
-          [.5,  .8 , -.5 ],
-        ];
+
+        
+        var openingPositions = [ ];
+
+        for( var i =0; i < 200; i ++ ){
+
+          var t = (i / 200 ) *  Math.PI * 2;
+          var x = (.5 + Math.sin( i / 20 * Math.PI ) * .2) *  Math.cos( t )
+          var y = (.5 + Math.sin( i / 20 * Math.PI ) * .2) *Math.sin( t )
+
+          var z = 5.5 + .1 * Math.sin( i / 20 * Math.PI )
+
+          openingPositions.push([ x , z , y] );
+        
+        }
+        
+        var op = openingPositions;
+
+        var geo = new THREE.IcosahedronGeometry( .02 , 1 )
+        var mat = new THREE.MeshBasicMaterial( 0x00ff00 )
+
+        for( var i = 0; i < openingPositions.length ; i++ ){
+
+          var m = new THREE.Mesh( geo , mat );
+          m.position.set( op[i][0],op[i][1],op[i][2]) 
+          opening.push( m.position );
+          scene.add( m );
+        }
+        
+       
+        var geo = rayMaker.createGeometry( light , opening, rayStoppers );
+
+        var m = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
+
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          opacity: .1,
+          depthWrite: false
+          
+        }) );
+        scene.add( m );
+
+
+        var opening = [];
+        var openingMarkers = [];
+
+        
+        var openingPositions = [ ];
+
+        for( var i =0; i < 200; i ++ ){
+
+          var t = (i / 200 ) *  Math.PI * 2;
+          var x = 1 + (.5 + Math.sin( i / 20 * Math.PI ) * .2) *  Math.cos( t )
+          var y = 1 + (.5 + Math.sin( i / 20 * Math.PI ) * .2) *Math.sin( t )
+
+          var z = 2.5 + .1 * Math.sin( i / 20 * Math.PI )
+
+          openingPositions.push([ x , z , y] );
+        
+        }
         
         var op = openingPositions;
 

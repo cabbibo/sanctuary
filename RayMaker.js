@@ -16,6 +16,7 @@ function RayMaker( light , opening , ground ){
     scene.add( mesh );
     mesh.position.x = 100000;
 
+    mesh.visible = false;
   }
 
   // opening is array of points

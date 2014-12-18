@@ -11,12 +11,18 @@
     <script src="lib/three.js">             </script>
     <script src="lib/jquery.min.js">            </script>
     <script src="lib/TrackballControls.js">     </script>
+    <script src="lib/OrbitControls.js">     </script>
     <script src="lib/SubdivisionModifier.js">   </script>
     
     <script src="lib/ShaderLoader.js"></script>
 
-    <script src="raymaker.js"></script>
+    <script src="Raymaker.js"></script>
+    <script src="Opening.js"></script>
     <script src="create.js"></script>
+    
+    <script src="initColumns.js"></script>
+    <script src="initGround.js"></script>
+    <script src="initRays.js"></script>
 
     <script>
 
@@ -66,12 +72,23 @@
         var h = window.innerHeight;
 
         camera = new THREE.PerspectiveCamera( 65 , w/h , .1 , 100 );
-        camera.position.z = 4;
-        camera.position.y = 1;
+        camera.position.z = 20;
+        camera.position.y = 5;
 
-        controls = new THREE.TrackballControls( camera );
+        controls = new THREE.OrbitControls( camera );
+        controls.minPolarAngle = -Math.PI * .5;
+        controls.maxPolarAngle = Math.PI * .5;
+        controls.autoRotate = true;
+
         scene = new THREE.Scene();
 
+        scene.fog = new THREE.Fog( 0x000000 , 10, 40 )
+        mover = new THREE.Object3D();
+        mover.position.y = 0;
+
+        mover.updateMatrix();
+        mover.updateMatrixWorld();
+        scene.add( mover );
 
         rayMaker = new RayMaker( v , v , 0 , 1000);
 
@@ -81,105 +98,30 @@
 
 
 
-        var geo = new THREE.PlaneGeometry( 100 , 100 );
-        var mat = new THREE.ShaderMaterial({
-          uniforms: uniforms,
-          vertexShader: shaders.vs.ground,
-          fragmentShader: shaders.fs.ground
-        });
-        var ground = new THREE.Mesh( geo , mat );
 
-        scene.add( ground );
-        ground.rotation.x = -Math.PI/2;
-        ground.updateMatrix();
-        ground.updateMatrixWorld();
-
-        rayStoppers.push( ground );
-
-        var cube = new THREE.Mesh( new THREE.BoxGeometry( .2 , 20. , .2 ) , new THREE.MeshNormalMaterial() );
-
-        scene.add( cube );
-        cube.position.x = 1.;
-        cube.position.z = .7;
-        cube.position.y = .3;
-        cube.updateMatrix();
-        cube.updateMatrixWorld();
-        rayStoppers.push( cube );
-
-        var geo = new THREE.BoxGeometry( .1 , 20. , .1 );
-        var mat =  new THREE.MeshNormalMaterial();
-        for( var i = 0; i < 20; i ++ ){
-          var cube = new THREE.Mesh( geo , mat );
-
-          scene.add( cube );
-          cube.position.x = ( Math.random() -.5 ) * 5;
-          cube.position.y = .7;
-          cube.position.z = ( Math.random() -.5 ) * 5;
-          cube.updateMatrix();
-          cube.updateMatrixWorld();
-          rayStoppers.push( cube );
-
-        }
-
-
+        initGround();
+        initColumns( 100);
 
         var lightMarker = new THREE.Mesh( 
-          new THREE.IcosahedronGeometry( .02 , 1 ),
+          new THREE.IcosahedronGeometry( .5 , 1 ),
           new THREE.MeshNormalMaterial() 
           );
 
-        var light = lightMarker.position;
+        light = lightMarker.position;
 
-        light.set( .1 , 8.2 , .25 );
+        light.set( 0 , 12.2 , 0 );
 
-        scene.add( lightMarker );
-
-        var opening = [];
-        var openingMarkers = [];
-
-        
-        var openingPositions = [ ];
-
-        for( var i =0; i < 200; i ++ ){
-
-          var t = (i / 200 ) *  Math.PI * 2;
-          var x = (.5 + Math.sin( i / 20 * Math.PI ) * .2) *  Math.cos( t )
-          var y = (.5 + Math.sin( i / 20 * Math.PI ) * .2) *Math.sin( t )
-
-          var z = 5.5 + .1 * Math.sin( i / 20 * Math.PI )
-
-          openingPositions.push([ x , z , y] );
-        
-        }
-        
-        var op = openingPositions;
-
-        var geo = new THREE.IcosahedronGeometry( .02 , 1 )
-        var mat = new THREE.MeshBasicMaterial( 0x00ff00 )
-
-        for( var i = 0; i < openingPositions.length ; i++ ){
-
-          var m = new THREE.Mesh( geo , mat );
-          m.position.set( op[i][0],op[i][1],op[i][2]) 
-          opening.push( m.position );
-          scene.add( m );
-        }
-        
+        var l = new THREE.PointLight( 0xfffffff , 1 , 100 );
+        l.position.copy( light );
        
-        var geo = rayMaker.createGeometry( light , opening, rayStoppers );
-
-        var m = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
-
-          side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,
-          transparent: true,
-          opacity: .1,
-          depthWrite: false
-          
-        }) );
-        scene.add( m );
+        mover.add( l );
+        mover.add( lightMarker );
 
 
+        initRays();
+
+        
+       /*
         var opening = [];
         var openingMarkers = [];
 
@@ -223,12 +165,13 @@
           depthWrite: false
           
         }) );
-        scene.add( m );
+        scene.add( m );*/
 
         renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth, window.innerHeight );
 
         document.body.appendChild( renderer.domElement );
+         window.addEventListener( 'resize', onWindowResize , false );
 
       }
 
@@ -237,6 +180,16 @@
         requestAnimationFrame( animate );
         controls.update();
         renderer.render( scene , camera );
+      }
+
+       // Resets the renderer to be the proper size
+      function onWindowResize(){
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
       }
 
     </script>

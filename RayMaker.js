@@ -13,15 +13,15 @@ function RayMaker( light , opening , ground ){
     var mesh =  new THREE.Mesh( g , m );
     this.markers.push( mesh );
 
-    scene.add( mesh );
+    mover.add( mesh );
     mesh.position.x = 100000;
 
-    mesh.visible = false;
+    //mesh.visible = false;
   }
 
   // opening is array of points
 
-  // ground is the scene we are going to intersect with, to 
+  // ground is the mover we are going to intersect with, to 
   // know where the ray needs to end
 
 
@@ -48,6 +48,7 @@ RayMaker.prototype.cast = function( light , point , ground ){
   }
 
 }
+
 RayMaker.prototype.createGeometry = function( light , opening , ground ){
 
   var v1 = new THREE.Vector3();
@@ -64,6 +65,8 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
     ave.add( opening[i] );
   }
 
+  ave.multiplyScalar( 1 / numOf );
+
 
 
   // Finds the base points of our projections onto the object
@@ -79,10 +82,10 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
 
     }else{
       
-      iPoints.push( o.point );
+      iPoints.push( o.point.clone().sub( mover.position ) );
       iDist.push( o.distance );
 
-      this.markers[i].position.copy( o.point );
+      this.markers[i].position.copy( o.point.clone().sub( mover.position ) );
 
     }
 
@@ -90,8 +93,8 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
 
   var geometry = new THREE.BufferGeometry();
 
-  var sides = numOf
-  var verts = numOf * 6; 
+  // 6 from side 3 from top
+  var verts = numOf * 6;  
   
   var positions = new Float32Array( verts * 3 );
   var normals   = new Float32Array( verts * 3 );
@@ -99,7 +102,6 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
 
 
   for( var i = 0; i < numOf; i++ ){
-
 
     var next = (i+1)%numOf;
 
@@ -157,6 +159,43 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
     distances[ index + 5 ] = d1;
 
   }
+
+  for( var i = 0; i < numOf; i++ ){
+
+    var next = (i+1)%numOf;
+
+    var v1 = opening[ i ];
+    var v2 = opening[ next ];
+    var v3 = ave;
+
+
+    index = numOf * 6;
+    index += i * 3;
+
+    positions[ index * 3 + 0  ] = v1.x;
+    positions[ index * 3 + 1  ] = v1.y;
+    positions[ index * 3 + 2  ] = v1.z;
+
+    positions[ index * 3 + 3  ] = v3.x;
+    positions[ index * 3 + 4  ] = v3.y;
+    positions[ index * 3 + 5  ] = v3.z;
+
+    positions[ index * 3 + 6  ] = v2.x;
+    positions[ index * 3 + 7  ] = v2.y;
+    positions[ index * 3 + 8  ] = v2.z;
+
+    distances[ index + 0 ] = 0;
+    distances[ index + 1 ] = 0;
+    distances[ index + 2 ] = 0;
+
+
+
+
+
+  }
+
+
+
   console.log( positions );
   console.log( normals );
   console.log( distances );
@@ -164,6 +203,68 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
   //geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
   geometry.addAttribute( 'distance', new THREE.BufferAttribute( distances , 1 ) );
+  
+
+  return geometry;
+
+}
+
+RayMaker.prototype.createCapGeometry = function( light , opening , ground ){
+
+  var v1 = new THREE.Vector3();
+  var numOf = opening.length;
+
+  console.log( light );
+
+  var iPoints = [];
+  var iDist   = [];
+
+
+  var ave = new THREE.Vector3();
+  for( var i = 0; i < numOf; i++ ){
+    ave.add( opening[i] );
+  }
+
+  ave.multiplyScalar( 1 / numOf );
+
+  
+  var geometry = new THREE.BufferGeometry();
+
+  // 6 from side 3 from top
+  var verts = numOf * 6;  
+  
+  var positions = new Float32Array( verts * 3 );
+ 
+  for( var i = 0; i < numOf; i++ ){
+
+    var next = (i+1)%numOf;
+
+    var v1 = opening[ i ];
+    var v2 = opening[ next ];
+    var v3 = ave;
+
+    index = i * 3;
+
+    positions[ index * 3 + 0  ] = v1.x;
+    positions[ index * 3 + 1  ] = v1.y;
+    positions[ index * 3 + 2  ] = v1.z;
+
+    positions[ index * 3 + 3  ] = v2.x;
+    positions[ index * 3 + 4  ] = v2.y;
+    positions[ index * 3 + 5  ] = v2.z;
+
+    positions[ index * 3 + 6  ] = v3.x;
+    positions[ index * 3 + 7  ] = v3.y;
+    positions[ index * 3 + 8  ] = v3.z;
+
+
+
+
+  }
+
+  console.log( positions );
+
+  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
   
 
   return geometry;

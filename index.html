@@ -16,7 +16,7 @@
     
     <script src="lib/ShaderLoader.js"></script>
 
-    <script src="Raymaker.js"></script>
+    <script src="RayMaker.js"></script>
     <script src="Opening.js"></script>
     <script src="create.js"></script>
     
@@ -46,7 +46,7 @@
       var raycaster = new THREE.Raycaster(); 
 
 
-      var shaders = new ShaderLoader( '../shaders' , '../shaderChunks'   );
+      var shaders = new ShaderLoader( 'shaders' , 'shaderChunks'   );
 
       shaders.shaderSetLoaded = function(){
         init();

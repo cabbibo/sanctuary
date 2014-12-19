@@ -17,11 +17,21 @@ function Opening( pArray ){
   col.b = Math.random();
 
 
-  var m = new THREE.Mesh( new THREE.CubeGeometry() , new THREE.ShaderMaterial({
+
+  var geo = rayMaker.createGeometry( light , this.positions, rayStoppers );
+  
+  this.body = new THREE.Mesh(  geo , new THREE.ShaderMaterial({
 
     uniforms:{
       color: { type:"c" , value: col },
-      time:G.time
+      time:G.time,
+      t_audio:G.t_audio,
+    },
+    attributes:{
+      id:{
+        type:"f",
+        value:null
+      }
     },
     vertexShader: shaders.vs.ray,
     fragmentShader: shaders.fs.ray,
@@ -32,20 +42,18 @@ function Opening( pArray ){
     
   }) );
 
-  this.body = m;
 
+  var geo = rayMaker.createCapGeometry( light , this.positions, rayStoppers );
   
-  var c = new THREE.Mesh( new THREE.CubeGeometry() , new THREE.MeshBasicMaterial({
+  this.cap = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
 
     color:col, 
     side: THREE.DoubleSide,
     
   }) );
 
-  this.body = m;
-  this.cap = c;
+ // this.cap = c;
 
-  this.reset();
 
   mover.add( this.body );
   mover.add( this.cap );

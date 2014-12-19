@@ -54,7 +54,7 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
   var v1 = new THREE.Vector3();
   var numOf = opening.length;
 
-  console.log( light );
+  //console.log( light );
 
   var iPoints = [];
   var iDist   = [];
@@ -99,6 +99,7 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
   var positions = new Float32Array( verts * 3 );
   var normals   = new Float32Array( verts * 3 );
   var distances = new Float32Array( verts * 1 );
+  var ids       = new Float32Array( verts * 1 );
 
 
   for( var i = 0; i < numOf; i++ ){
@@ -158,51 +159,34 @@ RayMaker.prototype.createGeometry = function( light , opening , ground ){
     distances[ index + 4 ] = d2;
     distances[ index + 5 ] = d1;
 
-  }
 
-  for( var i = 0; i < numOf; i++ ){
+    ids[ index + 0 ] = i/numOf;
+    ids[ index + 1 ] = next/numOf;
+    ids[ index + 2 ] = i/numOf;
+    
+    ids[ index + 3 ] = next/numOf;
+    ids[ index + 4 ] = next/numOf;
+    ids[ index + 5 ] = i/numOf;
 
-    var next = (i+1)%numOf;
-
-    var v1 = opening[ i ];
-    var v2 = opening[ next ];
-    var v3 = ave;
-
-
-    index = numOf * 6;
-    index += i * 3;
-
-    positions[ index * 3 + 0  ] = v1.x;
-    positions[ index * 3 + 1  ] = v1.y;
-    positions[ index * 3 + 2  ] = v1.z;
-
-    positions[ index * 3 + 3  ] = v3.x;
-    positions[ index * 3 + 4  ] = v3.y;
-    positions[ index * 3 + 5  ] = v3.z;
-
-    positions[ index * 3 + 6  ] = v2.x;
-    positions[ index * 3 + 7  ] = v2.y;
-    positions[ index * 3 + 8  ] = v2.z;
-
-    distances[ index + 0 ] = 0;
-    distances[ index + 1 ] = 0;
-    distances[ index + 2 ] = 0;
-
+    
 
 
 
 
   }
 
+ 
 
 
-  console.log( positions );
-  console.log( normals );
-  console.log( distances );
+
+  //console.log( positions );
+  //console.log( normals );
+  //console.log( distances );
 
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
   //geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
   geometry.addAttribute( 'distance', new THREE.BufferAttribute( distances , 1 ) );
+  geometry.addAttribute( 'id', new THREE.BufferAttribute( ids , 1 ) );
   
 
   return geometry;
@@ -214,7 +198,7 @@ RayMaker.prototype.createCapGeometry = function( light , opening , ground ){
   var v1 = new THREE.Vector3();
   var numOf = opening.length;
 
-  console.log( light );
+  //console.log( light );
 
   var iPoints = [];
   var iDist   = [];
@@ -262,7 +246,7 @@ RayMaker.prototype.createCapGeometry = function( light , opening , ground ){
 
   }
 
-  console.log( positions );
+  //console.log( positions );
 
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
   

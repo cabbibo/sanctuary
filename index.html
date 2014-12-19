@@ -30,8 +30,10 @@
 
       var matcap = THREE.ImageUtils.loadTexture('img/rough-aluminium.jpg');
 
-      var uniforms = {
+      var G = {
 
+        dT:{type:"f" , value:0},
+        time:{type:"f" , value:0},
         t_matcap:{ type:"t" , value: matcap },
         fogColor:{ type:"v3" , value: new THREE.Vector3() },
 
@@ -53,11 +55,11 @@
         animate();
       }
 
-      shaders.load( 'vs-rainbow' , 'rainbow' , 'vertex' );
-      shaders.load( 'fs-rainbow' , 'rainbow' , 'fragment' );
-      
       shaders.load( 'vs-ground' , 'ground' , 'vertex' );
       shaders.load( 'fs-ground' , 'ground' , 'fragment' );
+
+      shaders.load( 'vs-ray' , 'ray' , 'vertex' );
+      shaders.load( 'fs-ray' , 'ray' , 'fragment' );
 
 
       var rayStoppers = [];
@@ -70,6 +72,8 @@
 
         var w = window.innerWidth;
         var h = window.innerHeight;
+
+        clock = new THREE.Clock();
 
         camera = new THREE.PerspectiveCamera( 65 , w/h , .1 , 100 );
         camera.position.z = 20;
@@ -84,7 +88,7 @@
 
         scene.fog = new THREE.Fog( 0x000000 , 10, 40 )
         mover = new THREE.Object3D();
-        mover.position.y = 0;
+        mover.position.y = -1
 
         mover.updateMatrix();
         mover.updateMatrixWorld();
@@ -109,7 +113,7 @@
 
         light = lightMarker.position;
 
-        light.set( 0 , 12.2 , 0 );
+        light.set( 3 , 18.2 , 0 );
 
         var l = new THREE.PointLight( 0xfffffff , 1 , 100 );
         l.position.copy( light );
@@ -177,8 +181,12 @@
 
       function animate(){
 
+
         requestAnimationFrame( animate );
         controls.update();
+
+        G.dT.value = clock.getDelta();
+        G.time.value += G.dT.value;
         renderer.render( scene , camera );
       }
 

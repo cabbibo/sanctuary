@@ -2,11 +2,11 @@ function initGround(){
 
 
   var geo = new THREE.PlaneGeometry( 100 , 100 );
-  var mat = new THREE.ShaderMaterial({
+  /*var mat = new THREE.ShaderMaterial({
     uniforms: uniforms,
     vertexShader: shaders.vs.ground,
     fragmentShader: shaders.fs.ground
-  });
+  });*/
 
   var mat = new THREE.MeshLambertMaterial({
     color:0x555555,

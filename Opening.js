@@ -16,13 +16,18 @@ function Opening( pArray ){
   col.g = Math.random();
   col.b = Math.random();
 
-  var m = new THREE.Mesh( new THREE.CubeGeometry() , new THREE.MeshBasicMaterial({
 
-    color:col, 
+  var m = new THREE.Mesh( new THREE.CubeGeometry() , new THREE.ShaderMaterial({
+
+    uniforms:{
+      color: { type:"c" , value: col },
+      time:G.time
+    },
+    vertexShader: shaders.vs.ray,
+    fragmentShader: shaders.fs.ray,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     transparent: true,
-    opacity: .1,
     depthWrite: false
     
   }) );

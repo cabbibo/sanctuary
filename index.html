@@ -8,46 +8,52 @@
 
   <body>
 
-    <script src="lib/three.min.js">             </script>
-    <script src="lib/underscore.js">             </script>
-    <script src="lib/jquery.min.js">            </script>
-    <script src="lib/TrackballControls.js">     </script>
-    <script src="lib/OrbitControls.js">     </script>
-    <script src="lib/SubdivisionModifier.js">   </script>
+    <script src = "lib/leap.min.js"               ></script>
+    <script src = "lib/three.min.js"              ></script>
+    <script src = "lib/underscore.js"             ></script>
+    <script src = "lib/jquery.min.js"             ></script>
+    <script src = "lib/TrackballControls.js"      ></script>
+    <script src = "lib/OrbitControls.js"          ></script>
+    <script src = "lib/SubdivisionModifier.js"    ></script>
+    <script src = "lib/PhysicsRenderer.js"        ></script>
     
-    <script src="lib/VREffect.js"></script>
-    <script src="lib/VRControls.js"></script>
+    <script src = "lib/VREffect.js"               ></script>
+    <script src = "lib/VRControls.js"             ></script>
     
-    <script src="lib/ShaderLoader.js"></script>
+    <script src = "lib/ShaderLoader.js"           ></script>
 
 
-     <script src="//js.leapmotion.com/leap-0.6.3.min.js"></script>
 
 
-    <script src = "lib/UserAudio.js"            ></script>
-    <script src = "lib/Stream.js"               ></script>
-    <script src = "lib/AudioController.js"      ></script>
-    <script src = "lib/AudioTexture.js"         ></script>
-    <script src = "lib/PositionalAudio.js"      ></script>
-    <script src = "lib/Looper.js"  ></script>
+    <script src = "lib/UserAudio.js"              ></script>
+    <script src = "lib/Stream.js"                 ></script>
+    <script src = "lib/AudioController.js"        ></script>
+    <script src = "lib/AudioTexture.js"           ></script>
+    <script src = "lib/PositionalAudio.js"        ></script>
+    <script src = "lib/Looper.js"                 ></script>
 
 
-    <script src="RayMaker.js"></script>
-    <script src="Opening.js"></script>
-    <script src="create.js"></script>
+    <script src = "RayMaker.js"                   ></script>
+    <script src = "Opening.js"                    ></script>
+    <script src = "create.js"                     ></script>
 
-    <script src="initColumns.js"></script>
-    <script src="initGround.js"></script>
-    <script src="initRays.js"></script>
+    <script src = "initColumns.js"                ></script>
+    <script src = "initGround.js"                 ></script>
+    <script src = "initRays.js"                   ></script>
 
+    <script src = "RepelerMesh.js"                ></script>
+    <script src = "GEM.js"                        ></script>
+    <script src = "GUI.js"                        ></script>
+    
     <script>
 
 
 
-        var tv1 = new THREE.Vector3();
-  var tv2 = new THREE.Vector3();
+      var tv1 = new THREE.Vector3();
+      var tv2 = new THREE.Vector3();
       var matcap = THREE.ImageUtils.loadTexture('img/rough-aluminium.jpg');
 
+      var counter = 0;
       var G = {
 
         dT:{type:"f" , value:0},
@@ -58,6 +64,10 @@
         fingers:{ type:"v3", value:[] }
 
       }
+
+      var REPELERS = [];
+
+
 
       var camera, renderer, scene , controls;
       
@@ -75,10 +85,15 @@
 
       
       var audioController = new AudioController();
-        var audio = new PositionalAudio( audioController , 'audio/beyondLoop.wav' ,{
+    
+     /* var audio = new PositionalAudio( audioController , 'audio/beyondLoop.wav' ,{
         looping: true 
-      });
+      });*/
 
+      var audio = new UserAudio( audioController );
+
+
+      audioController.mute.gain.value = 0;
 
       G.t_audio.value = audioController.texture;
 
@@ -94,6 +109,13 @@
         init();
         animate();
       }
+
+
+      shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+      
+      shaders.load( 'vs-sem'  , 'sem' , 'vertex' );
+      shaders.load( 'fs-sem' , 'sem' , 'fragment' );
+
 
       shaders.load( 'vs-ground' , 'ground' , 'vertex' );
       shaders.load( 'fs-ground' , 'ground' , 'fragment' );
@@ -126,6 +148,7 @@
 
         renderer = new THREE.WebGLRenderer( { antialias: true } );
 
+        renderer.autoClear = false;
        // renderer.setSize( window.innerWidth, window.innerHeight );
 
         document.body.appendChild( renderer.domElement );
@@ -170,19 +193,25 @@
 
 
         
-        var g = new THREE.IcosahedronGeometry(.1 , 1 );
+        var g = new THREE.IcosahedronGeometry(.005 , 1 );
         var m = new THREE.MeshBasicMaterial({
-          map:audioController.texture,
-          color: 0xffffff
+          //map:audioController.texture,
+          color: 0x000000
         });
         for(var i = 0; i < 50; i++ ){
 
           var mesh = new THREE.Mesh( g , m  );
+          mesh.target   = new THREE.Vector3();//toCart( 12 , t , p );
+          mesh.velocity = new THREE.Vector3();
+          mesh.power    = new THREE.Vector3( 1 , 1 , 1);
+          mesh.radius   = new THREE.Vector3( 1 , 1 , 1); 
+          REPELERS.push( mesh );
           G.fingers.value.push( mesh.position );
-
 
           scene.add( mesh );
 
+          mesh.position.x = (Math.random() - .5 ) * 5;
+          mesh.position.z = (Math.random() - .5 ) * 5;
 
         }
  
@@ -218,7 +247,7 @@
 
 
 
-        initGround();
+       /* initGround();
         initColumns( 100);
 
         var lightMarker = new THREE.Mesh( 
@@ -237,7 +266,49 @@
         mover.add( lightMarker );
 
 
-        initRays();
+        initRays();*/
+
+
+
+
+        t = new THREE.Mesh( new THREE.IcosahedronGeometry( .5 , 6 ) );
+
+        //t.position.z = 2;
+
+        t.position.z = 1.2;
+        t.position.y = .1;
+        t.updateMatrix();
+
+        var rep = G.fingers.value;
+
+        console.log( rep );
+        //var g = new THREE.Mesh( new THREE.IcosahedronGeometry( 3 , 4 ) );
+        gem = new RepelerMesh( 'Parameters' , t, REPELERS , {
+          
+          vs: shaders.vertexShaders.sem,
+          fs: shaders.fragmentShaders.sem,
+      
+          soul:{
+
+            repulsionPower:     { type:"f" , value: -.0002 , constraints:[-300  , 0] },
+
+            repulsionRadius:     { type:"f" , value: .1 , constraints:[ 0  , 1000] },
+
+
+
+          },
+
+          body:{
+            //t_refl:{type:"t" , value:reflectionCube},
+            //t_refr:{type:"t" , value:reflectionCube },
+            custom1:{type:"f" , value:.9 , constraints:[ .8 , 1 ]},
+            t_sem:{type:"t" , value: matcap }
+          }
+
+        }); 
+
+        gem.soul.reset( gem.t_og.value );
+        gem.toggle();
 
         controller.connect();
         
@@ -249,23 +320,31 @@
 
       function animate(){
 
+        //counter ++;
+        //counter %= 10;
+        //if( counter ==  0 ){
+          controls.update();
+
+          G.dT.value = clock.getDelta();
+          G.time.value += G.dT.value;
+          
+          updateFingers( controller.frame() );
+
+          gem.update();
+          
+          cube.position.x = Math.sin( G.time.value * .1 ) * 5; 
+          cube.position.y = (Math.sin( G.time.value * .1 )+1) * 5; 
+          cube.position.z = Math.sin( G.time.value * .1 ) * 5;
+
+
+          //cube.position.copy( G.fingers.value[4] );
+          
+          audioController.update();
+          
+          effect.render( scene, camera );
+
+       // }
         requestAnimationFrame( animate );
-        controls.update();
-
-        G.dT.value = clock.getDelta();
-        G.time.value += G.dT.value;
-
-        cube.position.x = Math.sin( G.time.value * .1 ) * 5; 
-        cube.position.y = (Math.sin( G.time.value * .1 )+1) * 5; 
-        cube.position.z = Math.sin( G.time.value * .1 ) * 5;
-
-        updateFingers( controller.frame() );
-
-        cube.position.copy( G.fingers.value[4] );
-        
-        audioController.update();
-        
-        effect.render( scene, camera );
        // renderer.render( scene , camera );
       }
 
@@ -383,9 +462,9 @@
     //p[2] *= .01;
 
     return [ 
-      p[0] * .01,
-      p[1] * .01,
-      p[2] * .01
+      p[0] * .001,
+      p[1] * .001,
+      p[2] * .001
     ]//return p;
 
   }
